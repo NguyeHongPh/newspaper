@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../middleware/authenticator");
 /* GET users listing. */
 const {
   getArticles,
@@ -11,18 +12,18 @@ const {
 } = require("../controllers/article.controller");
 
 
-router.post("/", createArticle);
+router.post("/", authMiddleware.loginRequired, createArticle);
 
-router.get("/title", getArticlesByTitles);
+router.get("/title", authMiddleware.loginRequired, getArticlesByTitles);
 
-router.get("/label", getArticlesByLabel);
+router.get("/label", authMiddleware.loginRequired,getArticlesByLabel);
 
-router.get("/", getArticles);
+router.get("/", authMiddleware.loginRequired, getArticles);
 
-router.put("/:id", updatedArticle);
+router.put("/:id", authMiddleware.loginRequired, updatedArticle);
 
 
-router.delete("/:id", deleteArticle);
+router.delete("/:id", authMiddleware.loginRequired, deleteArticle);
 
 
 
