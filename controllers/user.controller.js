@@ -1,8 +1,8 @@
 const userController = {};
 const User = require("../models/User");
 const { sendResponse, AppError } = require("../helpers/utils");
-const { body, validationResult } = require("express-validator");
-const isValidObjectId = require("./validateObjectId");
+const { validationResult } = require("express-validator");
+
 
 userController.createUser = async (req, res, next) => {
   try {
@@ -16,16 +16,13 @@ userController.createUser = async (req, res, next) => {
     if (!username || !password) {
       throw new AppError(400, "Username and password are required", "Bad request");
     }
-
     const currentUser = req.user;
     const isAdmin = currentUser && currentUser.role === 'admin';
     const role = isAdmin ? 'admin' : 'site_visitor';
-
     const checkValueOfName = await User.find({ name:  username });
     if (checkValueOfName.length) {
       throw new AppError(406, "Name is already taken", "Bad request");
     }
-
     const created = await User.create({ name: username, password, role });
     sendResponse(res, 200, true, { data: created }, null, "User created successfully!");
   } catch (error) {

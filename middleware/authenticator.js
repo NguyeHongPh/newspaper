@@ -1,11 +1,7 @@
 const jwt = require("jsonwebtoken");
-const bodyParser = require('body-parser');
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const { AppError } = require("../helpers/utils");
 const authMiddleware = {};
-
-const accessTokenSecret = 'youraccesstokensecret';
-const crypto = require('crypto');
 
 authMiddleware.loginRequired = (req, res, next) => {
   try {

@@ -1,7 +1,5 @@
 const { sendResponse, AppError } = require("../helpers/utils");
 const article = require("../models/Article");
-const isValidObjectId = require("./validateObjectId");
-const fs = require('fs');
 
 const articleController = {};
 articleController.getArticles = async (req, res, next) => {

@@ -11,20 +11,15 @@ const {
   deleteArticle,
 } = require("../controllers/article.controller");
 
-
-
-
-
 router.get("/label", authMiddleware.loginRequired,getArticlesByLabel);
 
-
-router.get("/", authMiddleware.loginRequired, getArticles);
+router.get("/allarticles", authMiddleware.loginRequired, getArticles);
 
 router.get("/:title", authMiddleware.loginRequired, getArticlesByTitles);
 
 router.post("/", authMiddleware.loginRequired, createArticle);
 
-router.put("/:id", authMiddleware.loginRequired, updatedArticle);
+router.put("/article/:id", authMiddleware.loginRequired, updatedArticle);
 
 
 router.delete("/:id", authMiddleware.loginRequired, deleteArticle);

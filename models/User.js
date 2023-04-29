@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
+require("dotenv").config()
 
 const userSchema = new mongoose.Schema({
-  name: {
+  username: {
     type: String,
     required: true,
   },
@@ -15,6 +18,13 @@ const userSchema = new mongoose.Schema({
     required: true,
   }
 });
+
+userSchema.methods.generateToken = async function () {
+  const accessToken = await jwt.sign({ _id: this._id }, JWT_SECRET_KEY, {
+    expiresIn: "25m",
+  });
+  return accessToken;
+};
 
 
 module.exports = mongoose.model("User", userSchema);
