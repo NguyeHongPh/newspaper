@@ -1,19 +1,18 @@
-const {AppError} = require("../helpers/utils");
+const {AppError,sendResponse} = require("../helpers/utils");
   const User = require("../models/User");
   const express = require('express');
   const bodyParser = require('body-parser')
   const app = express();
   const authController = {};
-  const base64 = require("base-64");
   app.use(bodyParser.json()) // for parsing application/json
   app.use(bodyParser.urlencoded({ extended: true }))
   
-  authController.loginWithUsernameandPassword = async (req, res, next) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
+  authController.loginWithemailandPassword = async (req, res, next) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
   
     if (!user) {
-      return next(new AppError(400, "Invalid username or password", "Login Error"));
+      return next(new AppError(400, "Invalid email", "Login Error"));
     }
   
     const isMatch = password === user.password;
@@ -21,12 +20,18 @@ const {AppError} = require("../helpers/utils");
     if (!isMatch) {
       return next(new AppError(400, "Invalid password", "Login Error"));
     }
-  
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-    });
+    accessToken = await user.generateToken();
+  return sendResponse(
+    res,
+    200,
+    true,
+    { user, accessToken },
+    null,
+    "Login successful"
+  );
   };
+
+  
   
   
   module.exports = authController;

@@ -6,9 +6,9 @@ const userController = require("../controllers/user.controller")
 
 
 
-router.get("/alluser", authMiddleware.loginRequired, userController.getAllUser);
-router.post("/createuser", authMiddleware.loginRequired, userController.createUser);
-router.delete("user/:id", authMiddleware.loginRequired,userController.deleteUserById);
+router.get("/", authMiddleware.loginRequired, userController.getAllUser);
+router.post("/", authMiddleware.loginRequired, userController.createUser);
+router.delete("/:id", authMiddleware.loginRequired,userController.deleteUserById);
 
 
 

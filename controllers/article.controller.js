@@ -2,36 +2,25 @@ const { sendResponse, AppError } = require("../helpers/utils");
 const article = require("../models/Article");
 
 const articleController = {};
-articleController.getArticles = async (req, res, next) => {
-    try {
-      const { page = 1, limit = 10, search, ...filterQuery } = req.query;
-      // Validate inputs
-      if (!Number.isInteger(parseInt(page)) || parseInt(page) <= 0) throw new Error('Invalid page number');
-      if (!Number.isInteger(parseInt(limit)) || parseInt(limit) <= 0) throw new Error('Invalid page limit');
-      const allowedFilters = ['title', 'Author', 'Categories'];
-      const filterKeys = Object.keys(filterQuery).filter(key => allowedFilters.includes(key));
-      filterKeys.forEach(key => {
-        const isValid = allowedFilters.includes(key);
-        if (!isValid) {
-          const exception = new Error(`Query ${key} is not allowed`);
-          exception.statusCode = 401;
-          throw exception;
-        }
-      });
-      const totalArticlesCount = await db.collection('articles').count(query);
-      const articles = await db.collection('articles').find(query).skip((+page - 1) * +limit).limit(+limit).toArray();
-      const totalPages = Math.ceil(totalArticlesCount / +limit);
-  
-      return res.status(200).send({
-        articles,
-        page: +page,
-        totalPages
-      });
-  
-    } catch (error) {   
-        next(error);
-    }
-  };
+articleController.getArticles = async (req, res) => {
+  const filter = {};
+  const { title } = req.query;
+  title ? (filter.title = title) : null;
+  try {
+    // Validate inputs
+    const listOfArticle = await article.find(filter);
+    res.status(200).send({
+      success: true,      
+      data: listOfArticle,
+      message: "Get all articles successfully",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ success: false, data: null, message: err.message });
+  }
+}
+
+
   
   async function readArticleData() {
     const articles = await Article.find({});
@@ -66,7 +55,7 @@ articleController.getArticles = async (req, res, next) => {
           throw new Error("label parameter is missing or invalid");
         }
         const labelRegex = new RegExp(label, 'i');
-        const result = await Article.find({ labels: labelRegex });
+        const result = await article.find({ labels: labelRegex });
         res.status(200).send(result);
       } catch (error) {
         next(error);
@@ -77,9 +66,9 @@ articleController.getArticles = async (req, res, next) => {
       try {
         // Get the request body
         const { name, label, description } = req.body;
-        if (req.user.role !== 'admin') {
-          sendResponse(res, 401, false, null, true, 'Unauthorized');
-          return;
+        const currentUser = req.user;
+        if (!currentUser || currentUser.role !== 'admin') {
+        throw new AppError(401, "Only admin user can perform this action", "Unauthorized")
         }
         // Check if any required fields are missing
         if (!name || !label || !description)
@@ -103,12 +92,12 @@ articleController.getArticles = async (req, res, next) => {
           throw new AppError(400, "Article's label is invalid.", "Bad request");
     
         // Check if the article already exists in the database
-        const existingArticle = await Article.findOne({ name });
+        const existingArticle = await article.findOne({ name });
         if (existingArticle)
           throw new AppError(400, "The article already exists.", "Bad request");
     
         // Create the new article in the database
-        const createdArticle = await Article.create({ name, label, content });
+        const createdArticle = await article.create({ name, label, content });
     
         // Send the new article as a response
         res.status(201).send(createdArticle);
@@ -122,9 +111,9 @@ const allowedUpdates = new Set(['name', 'labels', 'authorname','content','status
 
 articleController.updatedArticle = async (req, res, next) => {
   try {
-    if (req.user.role !== 'admin') {
-      throw new AppError(401, 'Unauthorized', 'Unauthorized');
-    }
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new AppError(401, "Only admin user can perform this action", "Unauthorized")
+      }
     const { id } = req.params;
     const updates = req.body;
     const invalidUpdates = Object.keys(updates).filter(key => !allowedUpdates.has(key));
@@ -149,10 +138,9 @@ articleController.updatedArticle = async (req, res, next) => {
     const { id } = req.params;//extract the id from object
     const options = { new: true }; //return the updated document
     try {
-      if (req.user.role !== 'admin') {
-        sendResponse(res, 401, false, null, true, 'Unauthorized');
-        return;
-      }
+      if (!currentUser || currentUser.role !== 'admin') {
+        throw new AppError(401, "Only admin user can perform this action", "Unauthorized")
+        }
         if (!isValidObjectId(id)) { //check the id is valid or not
             throw new AppError(402, "Article not found", "Bad request");
         }

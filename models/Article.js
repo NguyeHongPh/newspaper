@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 // Define the article schema
 const articleSchema = new mongoose.Schema({
-  name: {
+  title: {
     type: String,
     required: true
   },

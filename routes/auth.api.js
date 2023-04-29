@@ -9,14 +9,18 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 const authController = require('../controllers/auth.controller');
 
+
+// Route URL added to the route definition
 router.post("/login", 
-  validators.validate([
-    body("username", "Username must not be empty")
-      .exists(),
-    body("password", "Password must not be empty").exists().notEmpty(),
-  ]),
-  authController.loginWithUsernameandPassword
+  [
+    body("email").exists().isEmail().withMessage('Invalid email format'),
+    body("password").notEmpty().withMessage('Password cannot be empty'),
+  ],
+  authController.loginWithemailandPassword
 );
+
+module.exports = router;
+
 
 
 

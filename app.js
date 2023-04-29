@@ -5,7 +5,6 @@ var logger = require('morgan');
 const cors = require("cors");
 var indexRouter = require('./routes/index');
 const { sendResponse } = require("./helpers/utils");
-
 var app = express();
 
 app.use(logger('dev'));
@@ -31,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 /* Initialize Error Handling */
-app.use((err, req, res, next) => {
+app.use((err, res) => {
   console.log("ERROR", err);
   if (err.isOperational) {
     return sendResponse(res,err.statusCode ? err.statusCode : 500,false, null, { message: err.message }, err.errorType
