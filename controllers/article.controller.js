@@ -7,14 +7,11 @@ const articleController = {};
 articleController.getArticles = async (req, res, next) => {
     try {
       const { page = 1, limit = 10, search, ...filterQuery } = req.query;
-  
       // Validate inputs
       if (!Number.isInteger(parseInt(page)) || parseInt(page) <= 0) throw new Error('Invalid page number');
       if (!Number.isInteger(parseInt(limit)) || parseInt(limit) <= 0) throw new Error('Invalid page limit');
-  
       const allowedFilters = ['title', 'Author', 'Categories'];
       const filterKeys = Object.keys(filterQuery).filter(key => allowedFilters.includes(key));
-  
       filterKeys.forEach(key => {
         const isValid = allowedFilters.includes(key);
         if (!isValid) {
@@ -23,9 +20,7 @@ articleController.getArticles = async (req, res, next) => {
           throw exception;
         }
       });
-  
       const totalArticlesCount = await db.collection('articles').count(query);
-  
       const articles = await db.collection('articles').find(query).skip((+page - 1) * +limit).limit(+limit).toArray();
       const totalPages = Math.ceil(totalArticlesCount / +limit);
   
@@ -40,12 +35,12 @@ articleController.getArticles = async (req, res, next) => {
     }
   };
   
-  function readArticleData() {
-    const articleData = fs.readFileSync('article.json', 'utf8');  
-    return JSON.parse(articleData).data;
+  async function readArticleData() {
+    const articles = await Article.find({});
+    return articles;
   }
   
-  function findArticleByTitle(titleParam, allArticles) {
+  async function findArticleByTitle(titleParam, allArticles) {
     const title = titleParam.toLowerCase();
     return allArticles.find(article => article.title.toLowerCase() === title);
   }
@@ -55,16 +50,16 @@ articleController.getArticles = async (req, res, next) => {
       const allArticles = await readArticleData();
       const result = await findArticleByTitle(req.params.title, allArticles);
       if (result) {
-        const { id, title, labels } = result;
-        const article = { id, title, labels };
+        const { _id, title, labels } = result;
+        const article = { id: _id, title, labels };
         return res.status(200).send(article);
       } else {
         return res.status(404).send(`No article found with title ${req.params.title}`);
       }
     } catch (error) {
-        next(error);
-      }
-    };
+      next(error);
+    }
+  };
   
     articleController.getArticlesByLabel = async (req, res, next) => {
       try {
@@ -79,20 +74,17 @@ articleController.getArticles = async (req, res, next) => {
         next(error);
       }
     };
-    
-
-    const Article = require("../models/Article");
 
     articleController.createArticle = async (req, res, next) => {
       try {
         // Get the request body
-        const { name, label, content } = req.body;
+        const { name, label, description } = req.body;
         if (req.user.role !== 'admin') {
           sendResponse(res, 401, false, null, true, 'Unauthorized');
           return;
         }
         // Check if any required fields are missing
-        if (!name || !label || !content)
+        if (!name || !label || !description)
           throw new AppError(400, "Missing required data.", "Bad request");
     
         // Check if the label array has more than two elements
@@ -128,41 +120,30 @@ articleController.getArticles = async (req, res, next) => {
     };
     
 
-const allowedUpdates = new Set(['name', 'labels', 'authorname','content']);
+const allowedUpdates = new Set(['name', 'labels', 'authorname','content','status']);
 
-articleController.updatedArticle = async (req, res) => {
+articleController.updatedArticle = async (req, res, next) => {
   try {
     if (req.user.role !== 'admin') {
-      sendResponse(res, 401, false, null, true, 'Unauthorized');
-      return;
+      throw new AppError(401, 'Unauthorized', 'Unauthorized');
     }
-    const { dataId } = req.params;
+    const { id } = req.params;
     const updates = req.body;
     const invalidUpdates = Object.keys(updates).filter(key => !allowedUpdates.has(key));
     
     if (invalidUpdates.length) {
-      const error = new Error(`Update field not allowed`);
-      error.status = 401;
-      throw error;
+      throw new AppError(400, 'Invalid update field', 'Bad request');
     }
 
-    const db = fs.readFileSync('article.json', 'utf-8');
-    const { data } = JSON.parse(db);
-  
-    const targetIndex = data.findIndex(article => article.id === parseInt(dataId));
-      
-    if (targetIndex < 0) {
-      const error = new Error(`Article not found`);
-      error.status = 404;
-      throw error;
+    const updatedArticle = await Article.findByIdAndUpdate(id, updates, { new: true });
+
+    if (!updatedArticle) {
+      throw new AppError(404, 'Article not found', 'Not found');
     }
 
-    const updatedArticle = { ...data[targetIndex], ...updates };
-    data[targetIndex] = updatedArticle;
-    fs.writeFileSync('article.json', JSON.stringify({ data }));
-    res.status(200).send(updatedArticle);
+    sendResponse(res, 200, true, { data: updatedArticle }, null, 'Article updated successfully!');
   } catch (error) {
-    res.status(error.status || 500).send({ message: error.message });
+    next(error);
   }
 };
 

@@ -19,6 +19,11 @@ const articleSchema = new mongoose.Schema({
     enum: ['pending', 'working', 'review', 'done', 'archive'],
     default: 'pending'
   },
+  label: {
+    type: String,
+    enum: ["Politics","Sports","Breaking News","Weather","Technology","Entertainment"],
+    required: true
+  },
   isDeleted: {
     type: Boolean,
     default: false

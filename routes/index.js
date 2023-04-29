@@ -6,7 +6,7 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 const userAPI = require('./user.api');
-router.use('/users', userAPI);
+router.use('/user', userAPI);
 const articleAPI = require('./article.api');
 router.use('/article', articleAPI)
 module.exports = router;
