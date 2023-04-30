@@ -6,7 +6,7 @@ const validator = require("../middleware/validator")
 
 userController.createUser = async (req, res, next) => {
   try {
-    const  { email, password }  = req.body;
+    const { email, password } = req.body;
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -16,11 +16,14 @@ userController.createUser = async (req, res, next) => {
     if (!email || !password) {
       throw new AppError(400, "email and password are required", "Bad request");
     }
+
+    // Check if the current user is an admin
     const currentUser = req.user;
     if (!currentUser || currentUser.role !== 'admin') {
-      throw new AppError(401, "Only admin user can perform this action", "Unauthorized");
+      return sendResponse(res, 401, false, null, "Only admin user can perform this action", "Unauthorized");
     }
-    const checkValueOfemail = await User.find({ email:  email });
+
+    const checkValueOfemail = await User.find({ email: email });
     if (checkValueOfemail.length) {
       throw new AppError(406, "email is already taken", "Bad request");
     }
@@ -30,6 +33,8 @@ userController.createUser = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 
 userController.getAllUser = async (req, res, next) => {
@@ -60,7 +65,8 @@ userController.deleteUserById = async (req, res, next) => {
     // check if user is authorized (admin role)
     const currentUser = req.user;
     if (!currentUser || currentUser.role !== 'admin') {
-      throw new AppError(401, "Only admin user can perform this action", "Unauthorized")}
+      return sendResponse(res, 401, false, null, "Only admin user can perform this action", "Unauthorized");
+    }
     // check if id is valid ObjectId
     validator.checkObjectId(id);
     // find and delete user
