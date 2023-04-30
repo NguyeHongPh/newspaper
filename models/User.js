@@ -29,7 +29,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'site_visitor'],
     default: 'site_visitor',
-  },
+  }
+}, {
+  versionKey: false //remove the __v value 
 });
 
 
