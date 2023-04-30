@@ -1,8 +1,8 @@
 const { sendResponse, AppError } = require("../helpers/utils");
 const article = require("../models/Article");
 const validator = require("../middleware/validator")
-
 const articleController = {};
+
 articleController.getArticles = async (req, res, next) => {
   const filter = { isDeleted: false };
   const { title } = req.query;
@@ -66,43 +66,51 @@ try {
 
     articleController.createArticle = async (req, res, next) => {
       try {
-        // Get the request body
-        const currentUser = req.user;
         const { title, label, content } = req.body;
-      if (!currentUser || currentUser.role !== 'admin') {
-        return sendResponse(res, 401, false, null, "Only admin user can perform this action", "Unauthorized");
-      }
-      // Check if any required fields are missing
-      if (!title)
-        throw new AppError(400, "title missing", "Bad request");
-      if (!label)
-        throw new AppError(400, "label missing", "Bad request");
-      if (!content)
-        throw new AppError(400, "Missing content.", "Bad request");
-      // Check if the label array has more than two elements
-      const labelArray = Array.isArray(label) ? label : label.split(",");
-      if (labelArray.length > 2) {
-        const error = new Error("Article can only have one or two types.");
-        error.statusCode = 400;
-        throw error;
-      } 
-
-      // Check if all the labels are valid
-      const validArticleLabels = [
-        "Politics",
-        "Sports",
-        "Breaking News",
-        "Weather",
-        "Technology",
-        "Entertainment",
-      ];
-      const allLabelsValid = labelArray.every((type) => validArticleLabels.includes(type));
-      if (!allLabelsValid)
-        throw new AppError(400, "Article's label is invalid.", "Bad request");
+    
+        // Check if the current user is an admin
+        const currentUser = req.user;
+        if (!currentUser || currentUser.role !== "admin") {
+          return sendResponse( res,401,false,null,"Only admin user can perform this action", "Unauthorized");
+        }
+    
+        // Check if any required fields are missing
+        if (!title)
+          throw new AppError(400, "title missing", "Bad request");
+        if (!label)
+          throw new AppError(400, "label missing", "Bad request");
+        if (!content)
+          throw new AppError(400, "Missing content.", "Bad request");
+        // Check if the label array has more than two elements
+        const labelArray = Array.isArray(label) ? label : label.split(",");
+        if (labelArray.length > 2) {
+          const error = new Error("Article can only have one or two types.");
+          error.statusCode = 400;
+          throw error;
+        }
+    
+        // Check if all the labels are valid
+        const validArticleLabels = [
+          "Politics",
+          "Sports",
+          "Breaking News",
+          "Weather",
+          "Technology",
+          "Entertainment",
+        ];
+        const allLabelsValid = labelArray.every((type) =>
+          validArticleLabels.includes(type)
+        );
+        if (!allLabelsValid)
+          throw new AppError(
+            400,
+            "Article's label is invalid.",
+            "Bad request"
+          );
         // Check if the article already exists in the database
-        const existingArticle = await article.findOne({ title});
+        const existingArticle = await article.findOne({ title });
         if (existingArticle)
-          throw new AppError(400, "The article already exists.", "Bad request");
+          throw new AppError( 400, "The article already exists.","Bad request");
     
         // Create the new article in the database
         const createdArticle = await article.create({ title, label, content });
@@ -114,14 +122,18 @@ try {
       }
     };
     
+    
+    
+    
 
 const allowedUpdates = new Set(['name', 'labels', 'authorname','content','status']);
 
 articleController.updatedArticle = async (req, res, next) => {
   try {
-    if (!currentUser || currentUser.role !== 'admin') {
-      throw new AppError(401, "Only admin user can perform this action", "Unauthorized")
-      }
+    const currentUser = req.user;
+        if (!currentUser || currentUser.role !== "admin") {
+          return sendResponse( res,401,false,null,"Only admin user can perform this action", "Unauthorized");
+        }
     const { id } = req.params;
     const updates = req.body;
     const invalidUpdates = Object.keys(updates).filter(key => !allowedUpdates.has(key));
@@ -130,7 +142,7 @@ articleController.updatedArticle = async (req, res, next) => {
       throw new AppError(400, 'Invalid update field', 'Bad request');
     }
 
-    const updatedArticle = await Article.findByIdAndUpdate(id, updates, { new: true });
+    const updatedArticle = await article.findByIdAndUpdate(id, updates, { new: true });
 
     if (!updatedArticle) {
       throw new AppError(404, 'Article not found', 'Not found');
