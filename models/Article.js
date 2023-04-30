@@ -6,18 +6,9 @@ const articleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  description: {
+  content: {
     type: String,
     required: true
-  },
-  assignee: {
-    type: mongoose.SchemaTypes.ObjectId,
-    ref: "User"
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'working', 'review', 'done', 'archive'],
-    default: 'pending'
   },
   label: {
     type: String,
@@ -26,7 +17,8 @@ const articleSchema = new mongoose.Schema({
   },
   isDeleted: {
     type: Boolean,
-    default: false
+    default: false,
+    required: true
   },
   createdAt: {
     type: Date,
