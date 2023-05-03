@@ -8,7 +8,7 @@ require("dotenv").config()
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: [true, 'Please enter your email'],
+    required: [true, 'Please enter email'],
     unique: true,
     trim: true,
     lowercase: true,
@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please enter your password'],
+    required: [true, 'Please enter password'],
   },
   role: {
     type: String,

@@ -6,7 +6,7 @@ const validator = require("../middleware/validator")
 
 userController.createUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role = 'site_visitor' } = req.body;
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -27,7 +27,7 @@ userController.createUser = async (req, res, next) => {
     if (checkValueOfemail.length) {
       throw new AppError(406, "email is already taken", "Bad request");
     }
-    const created = await User.create({ email: email, password, role: 'admin' });
+    const created = await User.create({ email, password, role });
     sendResponse(res, 200, true, { data: created }, null, "User created successfully!");
   } catch (error) {
     next(error);

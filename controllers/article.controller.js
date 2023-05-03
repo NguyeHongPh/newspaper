@@ -19,37 +19,6 @@ try {
   res.status(500).send({ success: false, data: null, message: err.message });
 }
 }
-
-
-
-  
-  async function readArticleData() {
-    const articles = await article.find({});
-    return articles;
-  }
-  
-  async function findArticleByTitle(titleParam, allArticles) {
-    const title = titleParam.toLowerCase();
-    return allArticles.find(article => article.title.toLowerCase() === title);
-  }
-  
-  articleController.getArticlesByTitles = async (req, res, next) => {
-    try {
-      
-      const allArticles = await readArticleData();
-      const result = await findArticleByTitle(req.params.title, allArticles);
-      if (result) {
-        const { _id, title, labels } = result;
-        const article = { id: _id, title, labels };
-        return res.status(200).send(article);
-      } else {
-        return res.status(404).send(`No article found with title ${req.params.title}`);
-      }
-    } catch (error) {
-      next(error);
-    }
-  };
-  
     articleController.getArticlesByLabel = async (req, res, next) => {
       try {
         const label = req.params.label;
@@ -83,8 +52,8 @@ try {
           throw new AppError(400, "Missing content.", "Bad request");
         // Check if the label array has more than two elements
         const labelArray = Array.isArray(label) ? label : label.split(",");
-        if (labelArray.length > 2) {
-          const error = new Error("Article can only have one or two types.");
+        if (labelArray.length > 1) {
+          const error = new Error("Article can only have one type.");
           error.statusCode = 400;
           throw error;
         }
@@ -93,7 +62,7 @@ try {
         const validArticleLabels = [
           "Politics",
           "Sports",
-          "Breaking News",
+          "News",
           "Weather",
           "Technology",
           "Entertainment",
@@ -102,16 +71,14 @@ try {
           validArticleLabels.includes(type)
         );
         if (!allLabelsValid)
-          throw new AppError(
-            400,
-            "Article's label is invalid.",
-            "Bad request"
-          );
+          throw new AppError(400,"Article's label is invalid.","Bad request");
         // Check if the article already exists in the database
-        const existingArticle = await article.findOne({ title });
-        if (existingArticle)
-          throw new AppError( 400, "The article already exists.","Bad request");
-    
+        const existingArticle = await article.findOne({ $or: [{ title }, { content }] });
+        if (existingArticle) {
+          const message = existingArticle.title === title ? "The article already exists." : "The content already exists.";
+          throw new AppError(400, message, "Bad request");
+        }
+
         // Create the new article in the database
         const createdArticle = await article.create({ title, label, content });
     
@@ -122,11 +89,8 @@ try {
       }
     };
     
-    
-    
-    
 
-const allowedUpdates = new Set(['name', 'labels', 'authorname','content','status']);
+const allowedUpdates = new Set(['name', 'label', 'authorname','content','status']);
 
 articleController.updatedArticle = async (req, res, next) => {
   try {
