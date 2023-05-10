@@ -6,6 +6,10 @@ const articleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  authorname: {
+    type: String,
+    required: true
+  },
   content: {
     type: String,
     required: true
